@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Knowora - Articles</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      background: #0f172a;
+      color: white;
+      font-family: "Poppins", sans-serif;
+      text-align: center;
+    }
+    h1 {
+      color: #38bdf8;
+    }
+    .article {
+      background: #1e293b;
+      border-radius: 10px;
+      margin: 20px auto;
+      padding: 20px;
+      max-width: 700px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    }
+    button {
+      background: #38bdf8;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #0ea5e9;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧠 Articles intelligents Knowora</h1>
+  <p>Génère instantanément des articles instructifs avec l’IA.</p>
+  <button onclick="generateArticle()">Créer un article</button>
+
+  <div id="articlesContainer"></div>
+
+  <script>
+    const topics = [
+      "L’intelligence artificielle",
+      "Les énergies renouvelables",
+      "L’histoire du web",
+      "La robotique moderne",
+      "La blockchain et les cryptomonnaies"
+    ];
+
+    function generateArticle() {
+      const randomTopic = topics[Math.floor(Math.random() * topics.length)];
+      const article = document.createElement('div');
+      article.classList.add('article');
+      article.innerHTML = `
+        <h2>${randomTopic}</h2>
+        <p>${randomTopic} transforme notre monde à grande vitesse. Sur Knowora, découvrez comment cette innovation influence la technologie, la science et la société.</p>
+      `;
+      document.getElementById('articlesContainer').prepend(article);
+    }
+  </script>
+</body>
+</html>
