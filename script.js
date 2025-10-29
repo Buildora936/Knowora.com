@@ -13,7 +13,7 @@ document.getElementById('searchBtn').addEventListener('click', () => {
     alert(`Recherche de l'article : "${search}"`);
   }
 });
-const chatBox = document.getElementById("chat-box");
+                const chatBox = document.getElementById("chat-box");
 const userQuestion = document.getElementById("user-question");
 const askBtn = document.getElementById("ask-btn");
 const copyBtn = document.getElementById("copy-btn");
@@ -35,12 +35,11 @@ askBtn.addEventListener("click", async () => {
     aiDiv.innerHTML = `<b>AI :</b> <span id="typing">...</span>`;
     aiDiv.style.margin = "10px 0";
     chatBox.appendChild(aiDiv);
-
     chatBox.scrollTop = chatBox.scrollHeight;
     userQuestion.value = "";
 
     try {
-        const res = await fetch("https://api-inference.huggingface.co/models/gpt2", {
+        const res = await fetch("https://api-inference.huggingface.co/models/google/flan-t5-small", {
             method: "POST",
             headers: {
                 "Authorization": "Bearer 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",
@@ -50,7 +49,7 @@ askBtn.addEventListener("click", async () => {
         });
 
         const data = await res.json();
-        let answer = data[0]?.generated_text || "Pas de réponse disponible.";
+        const answer = data?.generated_text || "Pas de réponse disponible.";
         lastAnswer = answer;
 
         // Animation typing
