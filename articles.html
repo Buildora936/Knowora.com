@@ -1,68 +1,174 @@
+<!-- ai-knowledge.html -->
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Knowora - Articles</title>
-  <link rel="stylesheet" href="style.css" />
-  <style>
-    body {
-      background: #0f172a;
-      color: white;
-      font-family: "Poppins", sans-serif;
-      text-align: center;
-    }
-    h1 {
-      color: #38bdf8;
-    }
-    .article {
-      background: #1e293b;
-      border-radius: 10px;
-      margin: 20px auto;
-      padding: 20px;
-      max-width: 700px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
-    }
-    button {
-      background: #38bdf8;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 8px;
-      color: white;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    button:hover {
-      background: #0ea5e9;
-    }
-  </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Knowora — Recherche mondiale (Wikipédia + Wikidata)</title>
+<style>
+  body{font-family:Inter,Arial,Helvetica,sans-serif;background:#0b1220;color:#e6eef6;padding:20px}
+  .container{max-width:900px;margin:0 auto}
+  input{width:70%;padding:10px;border-radius:6px;border:1px solid #2b3a4a}
+  button{padding:10px 14px;margin-left:8px;border-radius:6px;border:none;background:#38bdf8;color:#042028;cursor:pointer}
+  .result{background:#071021;border:1px solid #234; padding:18px;border-radius:8px;margin-top:18px}
+  .meta{font-size:13px;color:#9fb6c8;margin-top:8px}
+  a.source{color:#7ee7ff}
+  .facts{margin-top:10px;background:#06131b;padding:10px;border-radius:6px}
+  .small{font-size:13px;color:#8fb0c2}
+</style>
 </head>
 <body>
-  <h1>🧠 Articles intelligents Knowora</h1>
-  <p>Génère instantanément des articles instructifs avec l’IA.</p>
-  <button onclick="generateArticle()">Créer un article</button>
+  <div class="container">
+    <h1>Knowora — Recherche mondiale</h1>
+    <p>Entrez un sujet (ex. : "Elon Musk", "Haïti", "Intelligence artificielle")</p>
 
-  <div id="articlesContainer"></div>
+    <div>
+      <input id="q" placeholder="Rechercher..." />
+      <button id="go">Rechercher</button>
+    </div>
 
-  <script>
-    const topics = [
-      "L’intelligence artificielle",
-      "Les énergies renouvelables",
-      "L’histoire du web",
-      "La robotique moderne",
-      "La blockchain et les cryptomonnaies"
-    ];
+    <div id="output"></div>
+  </div>
 
-    function generateArticle() {
-      const randomTopic = topics[Math.floor(Math.random() * topics.length)];
-      const article = document.createElement('div');
-      article.classList.add('article');
-      article.innerHTML = `
-        <h2>${randomTopic}</h2>
-        <p>${randomTopic} transforme notre monde à grande vitesse. Sur Knowora, découvrez comment cette innovation influence la technologie, la science et la société.</p>
-      `;
-      document.getElementById('articlesContainer').prepend(article);
+<script>
+/*
+  Fonctionnement :
+  - recherche via l'API opensearch de Wikipédia (fr/en)
+  - récupération du summary (REST) pour le premier résultat
+  - recherche d'entité Wikidata via wbsearchentities, extraction des facts si trouvée
+  - affichage avec sources
+  - cache localStorage simple
+*/
+
+const output = document.getElementById('output');
+const qInput = document.getElementById('q');
+const btn = document.getElementById('go');
+
+btn.onclick = () => doSearch(qInput.value.trim());
+
+async function doSearch(query){
+  if(!query) return alert('Veuillez entrer un sujet.');
+  output.innerHTML = '<p class="small">Recherche en cours…</p>';
+  const cacheKey = 'knowora_cache_'+query.toLowerCase();
+  const cached = localStorage.getItem(cacheKey);
+  if(cached){
+    renderResult(JSON.parse(cached));
+    return;
+  }
+
+  try{
+    // 1) Opensearch FR then EN
+    const frSearch = await fetchOpensearch('fr', query);
+    const enSearch = await fetchOpensearch('en', query);
+
+    // prefer FR if exists, else EN, else first any
+    const title = frSearch[1]?.[0] || enSearch[1]?.[0] || (frSearch[1]?.[0] || enSearch[1]?.[0]);
+    if(!title){
+      output.innerHTML = `<p class="small">Aucun résultat Wikipédia trouvé pour <b>${escapeHtml(query)}</b>.</p>`;
+      return;
     }
-  </script>
+
+    // 2) get summary
+    const summary = await fetchWikiSummary('fr', title) || await fetchWikiSummary('en', title);
+    // 3) get wikidata entity
+    const wd = await searchWikidata(query);
+
+    const result = { query, title: title, summary, wikidata: wd, fetchedAt: new Date().toISOString() };
+
+    localStorage.setItem(cacheKey, JSON.stringify(result)); // cache
+    renderResult(result);
+  } catch(err){
+    console.error(err);
+    output.innerHTML = `<p class="small">Erreur lors de la recherche — voir console.</p>`;
+  }
+}
+
+function renderResult(res){
+  let html = `<div class="result">`;
+  html += `<h2>${escapeHtml(res.title || res.query)}</h2>`;
+  if(res.summary){
+    html += `<p>${escapeHtml(res.summary.extract || res.summary.extract_html || res.summary.display_title || '')}</p>`;
+    // link
+    if(res.summary.content_urls?.desktop?.page){
+      html += `<div class="meta">Source : <a class="source" href="${res.summary.content_urls.desktop.page}" target="_blank">Wikipédia</a> · Langue : ${escapeHtml(res.summary.lang||'fr')}</div>`;
+    }
+  } else {
+    html += `<p class="small">Résumé Wikipédia indisponible.</p>`;
+  }
+
+  if(res.wikidata && res.wikidata.entity){
+    const ent = res.wikidata.entity;
+    html += `<div class="facts"><strong>Faits (Wikidata)</strong>`;
+    if(ent.labels && ent.labels.en) html += `<div class="small">Label EN: ${escapeHtml(ent.labels.en.value)}</div>`;
+    if(ent.labels && ent.labels.fr) html += `<div class="small">Label FR: ${escapeHtml(ent.labels.fr.value)}</div>`;
+    // show some simple props if exist
+    const claims = ent.claims || {};
+    const propsToShow = ['P19','P27','P570','P571','P31','P361']; // birthplace, country, died, inception, instance of, part of
+    propsToShow.forEach(p => {
+      if(claims[p]){
+        const val = claims[p][0];
+        // sometimes sitelink or datavalue
+        try{
+          const dv = val.mainsnak.datavalue.value;
+          let txt = dv.id || dv.time || dv['text'] || (dv.label? dv.label: JSON.stringify(dv));
+          html += `<div class="small">${p}: ${escapeHtml(String(txt))}</div>`;
+        }catch(e){}
+      }
+    });
+    html += `</div>`;
+    // provide link
+    html += `<div class="meta">Source : <a class="source" href="https://www.wikidata.org/wiki/${ent.id}" target="_blank">Wikidata</a></div>`;
+  }
+
+  html += `<div style="margin-top:12px;" class="small">Données récupérées le ${new Date(res.fetchedAt).toLocaleString()}</div>`;
+  html += `</div>`;
+
+  // disclaimer & attribution
+  html += `<p class="small" style="margin-top:8px">Contenu : sources publiques (Wikipédia / Wikidata). Licence CC BY-SA — veuillez consulter les pages pour l’attribution complète.</p>`;
+
+  output.innerHTML = html;
+}
+
+// ---- helper functions ----
+
+async function fetchOpensearch(lang, q){
+  const url = `https://${lang}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(q)}&limit=5&origin=*`;
+  const r = await fetch(url);
+  return r.json(); // returns [search, titles[], descriptions[], links[]]
+}
+
+async function fetchWikiSummary(lang, title){
+  // REST summary endpoint
+  try{
+    const url = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`;
+    const r = await fetch(url, {headers: {'Accept': 'application/json'}});
+    if(!r.ok) return null;
+    return r.json();
+  }catch(e){
+    return null;
+  }
+}
+
+async function searchWikidata(q){
+  // wbsearchentities then get entity data
+  try{
+    const searchUrl = `https://www.wikidata.org/w/api.php?action=wbsearchentities&search=${encodeURIComponent(q)}&language=en&format=json&origin=*`;
+    const s = await fetch(searchUrl).then(r=>r.json());
+    if(!s.search || !s.search[0]) return null;
+    const id = s.search[0].id; // ex Q95
+    const entityUrl = `https://www.wikidata.org/wiki/Special:EntityData/${id}.json`;
+    const ent = await fetch(entityUrl).then(r=>r.json());
+    return { entity: ent.entities[id] };
+  }catch(e){
+    return null;
+  }
+}
+
+function escapeHtml(s){
+  if(!s) return '';
+  return s.replace?.(/[&<>"']/g, c=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]) || s;
+}
+
+</script>
 </body>
 </html>
