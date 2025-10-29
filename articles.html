@@ -64,7 +64,7 @@ async function doSearch(query){
     // prefer FR if exists, else EN, else first any
     const title = frSearch[1]?.[0] || enSearch[1]?.[0] || (frSearch[1]?.[0] || enSearch[1]?.[0]);
     if(!title){
-      output.innerHTML = `<p class="small">Aucun résultat Wikipédia trouvé pour <b>${escapeHtml(query)}</b>.</p>`;
+      output.innerHTML = `<p class="small">Aucun résultat trouvé pour <b>${escapeHtml(query)}</b>.</p>`;
       return;
     }
 
@@ -169,6 +169,91 @@ function escapeHtml(s){
   return s.replace?.(/[&<>"']/g, c=> ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]) || s;
 }
 
+</script>
+  <script>
+async function doSearch(query){
+  if(!query) return alert('Veuillez entrer un sujet.');
+  output.innerHTML = '<p class="small">Recherche en cours…</p>';
+  const cacheKey = 'knowora_cache_'+query.toLowerCase();
+  const cached = localStorage.getItem(cacheKey);
+  if(cached){
+    renderResult(JSON.parse(cached));
+    return;
+  }
+
+  try{
+    // 1) Wikipédia & Wikidata
+    const frSearch = await fetchOpensearch('fr', query);
+    const enSearch = await fetchOpensearch('en', query);
+    const title = frSearch[1]?.[0] || enSearch[1]?.[0];
+    const summary = await fetchWikiSummary('fr', title) || await fetchWikiSummary('en', title);
+    const wd = await searchWikidata(query);
+
+    // 2) DuckDuckGo summary
+    const duck = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(query)}&format=json&no_html=1&skip_disambig=1`).then(r=>r.json());
+
+    // 3) NewsData.io (nécessite clé API gratuite)
+    const newsKey = "TA_CLE_API_NEWDATA_IO"; // à remplacer
+    const newsUrl = `https://newsdata.io/api/1/news?apikey=${newsKey}&q=${encodeURIComponent(query)}&language=fr,en`;
+    const news = await fetch(newsUrl).then(r=>r.json()).catch(()=>null);
+
+    // 4) REST Countries (si sujet semble être un pays)
+    let country = null;
+    if(/^[A-Za-z\s]+$/.test(query)){
+      country = await fetch(`https://restcountries.com/v3.1/name/${encodeURIComponent(query)}?fullText=true`)
+        .then(r=>r.json()).catch(()=>null);
+    }
+
+    const result = {query, title, summary, wikidata: wd, duck, news, country, fetchedAt:new Date().toISOString()};
+    localStorage.setItem(cacheKey, JSON.stringify(result));
+    renderResult(result);
+
+  } catch(err){
+    console.error(err);
+    output.innerHTML = `<p class="small">Erreur lors de la recherche — voir console.</p>`;
+  }
+}
+
+function renderResult(res){
+  let html = `<div class="result"><h2>${escapeHtml(res.title || res.query)}</h2>`;
+  
+  // Wikipedia summary
+  if(res.summary){
+    html += `<p>${escapeHtml(res.summary.extract)}</p>`;
+    if(res.summary.content_urls)
+      html += `<div class="meta">Source : <a class="source" href="${res.summary.content_urls.desktop.page}" target="_blank">Wikipédia</a></div>`;
+  }
+
+  // DuckDuckGo
+  if(res.duck?.AbstractText){
+    html += `<p>${escapeHtml(res.duck.AbstractText)}</p>`;
+    html += `<div class="meta">Source : <a class="source" href="${res.duck.AbstractURL}" target="_blank">DuckDuckGo</a></div>`;
+  }
+
+  // NewsData
+  if(res.news?.results?.length){
+    html += `<div class="facts"><strong>Actualités récentes</strong>`;
+    res.news.results.slice(0,3).forEach(n=>{
+      html += `<div class="small">📰 <a class="source" href="${n.link}" target="_blank">${escapeHtml(n.title)}</a></div>`;
+    });
+    html += `</div>`;
+  }
+
+  // Country info
+  if(res.country && Array.isArray(res.country) && res.country[0]){
+    const c = res.country[0];
+    html += `<div class="facts"><strong>Infos pays</strong>`;
+    html += `<div class="small">Capitale : ${escapeHtml(c.capital?.[0] || '—')}</div>`;
+    html += `<div class="small">Population : ${c.population.toLocaleString()}</div>`;
+    html += `<div class="small">Région : ${escapeHtml(c.region)}</div>`;
+    html += `<div class="small">Drapeau : <img src="${c.flags?.png}" width="32" /></div>`;
+    html += `</div>`;
+  }
+
+  html += `<div class="meta small">Données récupérées le ${new Date(res.fetchedAt).toLocaleString()}</div>`;
+  html += `</div>`;
+  output.innerHTML = html;
+}
 </script>
 </body>
 </html>
