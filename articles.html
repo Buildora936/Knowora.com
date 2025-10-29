@@ -30,13 +30,19 @@
     <div id="output"></div>
   </div>
 
-
+<div id="ai-assistant" style="max-width:600px; margin:40px auto; font-family:sans-serif; border:2px solid #3498db; border-radius:10px; padding:20px; background:#f4f6f8;">
+  <h2 style="text-align:center; color:#3498db;">Assistant Knowora</h2>
+  <div id="chat-box" style="border:1px solid #ccc; border-radius:8px; padding:10px; min-height:250px; max-height:400px; overflow-y:auto; background:white;"></div>
   
-<div id="ai-assistant">
-  <textarea id="user-question" placeholder="Pose ta question via Knowora ici..."></textarea>
-  <button id="ask-btn">Demander</button>
-  <div id="ai-response"></div>
+  <textarea id="user-question" placeholder="Pose ta question via Knowora ici..." rows="3" style="width:100%; padding:10px; margin-top:10px; border-radius:5px; border:1px solid #ccc;"></textarea>
+  
+  <div style="margin-top:10px; display:flex; justify-content:space-between;">
+    <button id="ask-btn" style="padding:10px 20px; cursor:pointer; background:#3498db; color:white; border:none; border-radius:5px;">Demander</button>
+    <button id="copy-btn" style="padding:10px 20px; cursor:pointer; background:#2ecc71; color:white; border:none; border-radius:5px;">Copier dernière réponse</button>
+  </div>
 </div>
+  
+
 <script>
 /*
   Fonctionnement :
