@@ -18,7 +18,7 @@
 </style>
 </head>
 <body>
-  <div class="container">
+  <div> class="container">
     <h1>Knowora — Recherche mondiale</h1>
     <p>Entrez un sujet (ex. : "Elon Musk", "Haïti", "Intelligence artificielle")</p>
 
@@ -29,88 +29,6 @@
 
     <div id="output"></div>
   </div>
-
-<div id="ai-assistant" style="max-width:600px; margin:40px auto; font-family:sans-serif; border:2px solid #3498db; border-radius:10px; padding:20px; background:#f4f6f8;">
-  <h2 style="text-align:center; color:#3498db;">Assistant Knowora</h2>
-  <div id="chat-box" style="border:1px solid #ccc; border-radius:8px; padding:10px; min-height:250px; max-height:400px; overflow-y:auto; background:white;"></div>
-  
-  <textarea id="user-question" placeholder="Pose ta question via Knowora ici..." rows="3" style="width:100%; padding:10px; margin-top:10px; border-radius:5px; border:1px solid #ccc;"></textarea>
-  
-  <div style="margin-top:10px; display:flex; justify-content:space-between;">
-    <button id="ask-btn" style="padding:10px 20px; cursor:pointer; background:#3498db; color:white; border:none; border-radius:5px;">Demander</button>
-    <button id="copy-btn" style="padding:10px 20px; cursor:pointer; background:#2ecc71; color:white; border:none; border-radius:5px;">Copier dernière réponse</button>
-  </div>
-</div>
-  <script>
-    const chatBox = document.getElementById("chat-box");
-const userQuestion = document.getElementById("user-question");
-const askBtn = document.getElementById("ask-btn");
-const copyBtn = document.getElementById("copy-btn");
-
-let lastAnswer = "";
-
-askBtn.addEventListener("click", async () => {
-    const question = userQuestion.value.trim();
-    if (!question) return alert("Veuillez poser une question.");
-
-    // Ajouter la question au chat
-    const userDiv = document.createElement("div");
-    userDiv.innerHTML = `<b>Vous :</b> ${question}`;
-    userDiv.style.margin = "10px 0";
-    chatBox.appendChild(userDiv);
-
-    // Zone de réponse de l'AI
-    const aiDiv = document.createElement("div");
-    aiDiv.innerHTML = `<b>AI :</b> <span id="typing">...</span>`;
-    aiDiv.style.margin = "10px 0";
-    chatBox.appendChild(aiDiv);
-    chatBox.scrollTop = chatBox.scrollHeight;
-    userQuestion.value = "";
-
-    try {
-        const res = await fetch("https://api-inference.huggingface.co/models/google/flan-t5-small", {
-            method: "POST",
-            headers: {
-                "Authorization": "Bearer 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",
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ inputs: question })
-        });
-
-        const data = await res.json();
-        const answer = data?.generated_text || "Pas de réponse disponible.";
-        lastAnswer = answer;
-
-        // Animation typing
-        let i = 0;
-        const typingSpan = document.getElementById("typing");
-        typingSpan.innerText = "";
-        const interval = setInterval(() => {
-            if (i < answer.length) {
-                typingSpan.innerText += answer[i];
-                i++;
-                chatBox.scrollTop = chatBox.scrollHeight;
-            } else {
-                clearInterval(interval);
-            }
-        }, 20);
-
-    } catch (err) {
-        document.getElementById("typing").innerText = "Erreur de connexion à l'API.";
-        console.error(err);
-    }
-});
-
-// Copier la dernière réponse
-copyBtn.addEventListener("click", () => {
-    if (lastAnswer) {
-        navigator.clipboard.writeText(lastAnswer)
-            .then(() => alert("Réponse copiée !"))
-            .catch(() => alert("Impossible de copier."));
-    } else {
-        alert("Aucune réponse à copier.");
-    }
-});
 
 <script>
 /*
