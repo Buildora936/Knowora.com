@@ -1,0 +1,40 @@
+name: Generate Knowora content from HuggingFace
+
+on:
+  workflow_dispatch:       # permet de lancer manuellement depuis l'onglet Actions
+  # schedule:               # optionnel: décommenter pour cron automatique
+  #   - cron: '0 6 * * *'   # exemple: chaque jour à 06:00 UTC
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: |
+          npm init -y
+          npm install node-fetch@2
+
+      - name: Run HF generation
+        env:
+          HF_API_KEY: ${{ secrets.HF_API_KEY }}
+        run: |
+          mkdir -p generated
+          node scripts/generate_from_hf.js "Écris un article court (150-200 mots) en français sur l'intelligence artificielle et cite Wikipédia comme source."
+
+      - name: Commit generated files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "actions@github.com"
+          git add generated || true
+          git commit -m "Add generated content $(date -u +'%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
+          git push origin HEAD:main
