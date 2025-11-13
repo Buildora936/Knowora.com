@@ -4,23 +4,28 @@
 }
 
 body {
+  margin: 0;
+  padding: 0;
   background: var(--bg);
   color: var(--text);
-  transition: 0.3s;
+  transition: 0.25s;
 }
 
+/* Thème clair */
 :root {
   --bg: #eef2f3;
   --text: #222;
   --card: white;
 }
 
+/* Thème sombre */
 body.dark {
-  --bg: #1a1a1a;
-  --text: #f0f0f0;
-  --card: #2a2a2a;
+  --bg: #1b1b1b;
+  --text: #f5f5f5;
+  --card: #292929;
 }
 
+/* ------- HEADER ------- */
 header {
   margin-top: 50px;
   text-align: center;
@@ -38,6 +43,7 @@ header {
   cursor: pointer;
 }
 
+/* ------- SEARCH BOX ------- */
 .searchBox {
   margin-top: 60px;
   position: relative;
@@ -49,8 +55,14 @@ input {
   padding: 12px;
   border-radius: 25px;
   border: none;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+  background: var(--card);
+  color: var(--text);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
   font-size: 1rem;
+}
+
+input:focus {
+  outline: 2px solid #1e88e5;
 }
 
 button {
@@ -63,19 +75,26 @@ button {
   transition: 0.3s;
 }
 
+button:hover {
+  background-color: #1565c0;
+}
+
 #voiceBtn {
   background: #ff4081;
 }
 
+/* ------- SUGGESTIONS ------- */
 #suggestions {
   list-style: none;
   padding: 0;
   margin-top: 5px;
   background: var(--card);
+  color: var(--text);
   border-radius: 10px;
   box-shadow: 0 2px 10px rgba(0,0,0,0.15);
   display: none;
   position: absolute;
+  z-index: 999;
   width: 100%;
 }
 
@@ -89,6 +108,7 @@ button {
   background: #e3f2fd;
 }
 
+/* ------- HISTORIQUE ------- */
 #historyList {
   margin-top: 20px;
   width: 320px;
@@ -102,4 +122,5 @@ button {
   border-radius: 10px;
   margin-bottom: 8px;
   cursor: pointer;
+  color: var(--text);
 }
