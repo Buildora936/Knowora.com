@@ -4,7 +4,6 @@ if (userLang.startsWith('en')) {
   document.querySelector('#slogan').textContent = "Knowledge at your fingertips";
   document.querySelector('#searchInput').placeholder = "Search...";
 }
-
 /* ----------------- THEME SOMBRE ----------------- */
 const themeToggle = document.getElementById("themeToggle");
 
@@ -24,6 +23,7 @@ if (localStorage.getItem("theme") === "dark") {
   document.body.classList.add("dark");
   themeToggle.textContent = "☀️";
 }
+
 /* ----------------- HISTORIQUE ----------------- */
 function loadHistory() {
   let hist = JSON.parse(localStorage.getItem("history") || "[]");
@@ -103,10 +103,6 @@ if (recognitionAPI) {
 } else {
   voiceBtn.style.display = "none"; // si navigateur ne supporte pas
 }
-// --- MODE SOMBRE ---
-document.getElementById("darkToggle").addEventListener("click", () => {
-    document.body.classList.toggle("darkmode");
-});
 
 // --- AUDIO ---
 let audioEnabled = false;
