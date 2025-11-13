@@ -7,11 +7,23 @@ if (userLang.startsWith('en')) {
 
 /* ----------------- THEME SOMBRE ----------------- */
 const themeToggle = document.getElementById("themeToggle");
+
 themeToggle.addEventListener("click", () => {
   document.body.classList.toggle("dark");
-  themeToggle.textContent = document.body.classList.contains("dark") ? "☀️" : "🌙";
+
+  // Change icon
+  themeToggle.textContent =
+    document.body.classList.contains("dark") ? "☀️" : "🌙";
+
+  // Sauvegarde du thème
+  localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
 });
 
+// Charger thème sauvegardé
+if (localStorage.getItem("theme") === "dark") {
+  document.body.classList.add("dark");
+  themeToggle.textContent = "☀️";
+}
 /* ----------------- HISTORIQUE ----------------- */
 function loadHistory() {
   let hist = JSON.parse(localStorage.getItem("history") || "[]");
