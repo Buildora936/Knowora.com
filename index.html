@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Knowora — Le savoir vivant</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🌐</span>
+      <div>
+        <h1>Knowora</h1>
+        <div class="tag">Le savoir qui évolue</div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <label class="switch">
+        <input id="themeToggle" type="checkbox">
+        <span class="slider"></span>
+      </label>
+
+      <select id="langSelect" title="Choisir la langue">
+        <option value="fr">Français</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+  </header>
+
+  <main class="main">
+    <section class="search-area">
+      <input id="query" type="text" placeholder="Posez une question ou un sujet (ex: Napoléon, Artificial Intelligence)"/>
+      <div class="actions">
+        <button id="searchBtn">🔎 Rechercher</button>
+        <button id="aiBtn">🤖 Ask Knowora AI</button>
+      </div>
+      <div class="hint">Astuce : changez la langue à droite (FR / EN). Les résultats viennent de Wikipedia.</div>
+    </section>
+
+    <section id="results" class="results">
+      <div class="empty">Résultats affichés ici</div>
+    </section>
+
+    <aside class="sidebar">
+      <h3>Historique</h3>
+      <div id="historyList" class="historyList"></div>
+      <button id="clearHistory" class="danger">Effacer l'historique</button>
+      <hr/>
+      <h4>À venir</h4>
+      <ul>
+        <li>Connexion utilisateur (Firebase)</li>
+        <li>Assistant IA complet (Hugging Face / OpenAI)</li>
+        <li>Sources multiples & vérification</li>
+      </ul>
+    </aside>
+  </main>
+
+  <footer class="footer">
+    © <span id="yr"></span> Knowora — Demo v1.0 · Sources : Wikipedia
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
