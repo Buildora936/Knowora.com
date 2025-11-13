@@ -103,3 +103,28 @@ if (recognitionAPI) {
 } else {
   voiceBtn.style.display = "none"; // si navigateur ne supporte pas
 }
+// --- MODE SOMBRE ---
+document.getElementById("darkToggle").addEventListener("click", () => {
+    document.body.classList.toggle("darkmode");
+});
+
+// --- AUDIO ---
+let audioEnabled = false;
+
+document.getElementById("audioToggle").addEventListener("click", () => {
+    audioEnabled = !audioEnabled;
+    if (audioEnabled) {
+        document.getElementById("audioToggle").innerText = "🔊 Audio ON";
+    } else {
+        document.getElementById("audioToggle").innerText = "🔈 Audio OFF";
+    }
+});
+
+// Fonction pour jouer un son
+function playSound(type) {
+    if (!audioEnabled) return;
+
+    const audio = new Audio(`sounds/${type}.mp3`);
+    audio.volume = 0.3;
+    audio.play();
+}
