@@ -3,62 +3,71 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Knowora — Le savoir vivant</title>
+  <title>Knowora • Le savoir qui Évolue</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <header class="topbar">
     <div class="brand">
-      <span class="logo">🌐</span>
-      <div>
+      <div class="logo">🌐</div>
+      <div class="title">
         <h1>Knowora</h1>
-        <div class="tag">Le savoir qui évolue</div>
+        <div class="subtitle">Le savoir instantané — powered by you</div>
       </div>
     </div>
 
     <div class="controls">
+      <div class="lang-auto">Lang: <select id="langSelect"><option value="auto">Auto</option><option value="fr">FR</option><option value="en">EN</option></select></div>
       <label class="switch">
         <input id="themeToggle" type="checkbox">
         <span class="slider"></span>
       </label>
-
-      <select id="langSelect" title="Choisir la langue">
-        <option value="fr">Français</option>
-        <option value="en">English</option>
-      </select>
     </div>
   </header>
 
   <main class="main">
-    <section class="search-area">
-      <input id="query" type="text" placeholder="Posez une question ou un sujet (ex: Napoléon, Artificial Intelligence)"/>
-      <div class="actions">
-        <button id="searchBtn">🔎 Rechercher</button>
-        <button id="aiBtn">🤖 Ask Knowora AI</button>
+    <section class="left">
+      <div class="search-card">
+        <input id="query" placeholder="Posez une question ou un sujet (ex: Napoléon, Artificial Intelligence)" autofocus />
+        <div class="actions">
+          <button id="searchBtn">🔎 Rechercher</button>
+          <button id="aiBtn">🤖 Ask Knowora AI</button>
+        </div>
+        <div class="suggest">Exemples : <button class="sugg">Elon Musk</button> <button class="sugg">Télétravail</button> <button class="sugg">Climate change</button></div>
       </div>
-      <div class="hint">Astuce : changez la langue à droite (FR / EN). Les résultats viennent de Wikipedia.</div>
+
+      <div id="results" class="results">
+        <div class="empty">Les résultats s'affichent ici.</div>
+      </div>
+
+      <div class="history-card">
+        <h3>Historique</h3>
+        <div id="historyList"></div>
+        <button id="clearHistory" class="small danger">Effacer</button>
+      </div>
     </section>
 
-    <section id="results" class="results">
-      <div class="empty">Résultats affichés ici</div>
-    </section>
+    <aside class="right">
+      <div class="chat-header">
+        <h3>Knowora Chat</h3>
+        <small>Assistant (simulation) — prêt pour API</small>
+      </div>
+      <div id="chatWindow" class="chat-window"></div>
 
-    <aside class="sidebar">
-      <h3>Historique</h3>
-      <div id="historyList" class="historyList"></div>
-      <button id="clearHistory" class="danger">Effacer l'historique</button>
-      <hr/>
-      <h4>À venir</h4>
-      <ul>
-        <li>Connexion utilisateur (Firebase)</li>
-        <li>Assistant IA complet (Hugging Face / OpenAI)</li>
-        <li>Sources multiples & vérification</li>
-      </ul>
+      <div class="chat-input">
+        <input id="chatInput" placeholder="Pose ta question au chatbot..." />
+        <button id="sendChat">Envoyer</button>
+      </div>
+
+      <div class="notes">
+        <h4>À propos</h4>
+        <p>V1.2 • Recherche Wikipedia + chat local. Pour brancher OpenAI/HuggingFace, on ajoutera une Cloud Function.</p>
+      </div>
     </aside>
   </main>
 
   <footer class="footer">
-    © <span id="yr"></span> Knowora — Demo v1.0 · Sources : Wikipedia
+    © <span id="yr"></span> Knowora — Demo v1.2 • Sources : Wikipedia
   </footer>
 
   <script src="script.js"></script>
