@@ -11,15 +11,27 @@
   <header>
     <h1>Knowora 🌐</h1>
     <p id="slogan">La Connaissance à portée de main</p>
+
+    <button id="themeToggle">🌙</button>
   </header>
 
-  <main>
-    <input id="searchInput" type="text" placeholder="Rechercher..." />
-    <button id="searchBtn">🔍</button>
+    <main>
+
+    <div class="searchBox">
+      <input id="searchInput" type="text" placeholder="Rechercher..." autocomplete="off"/>
+      <button id="searchBtn">🔍</button>
+      <button id="voiceBtn">🎤</button>
+
+      <ul id="suggestions"></ul>
+    </div>
+
+    <h3>Historique</h3>
+    <ul id="historyList"></ul>
+
   </main>
 
   <footer>
-    <p>Knowora V1.3 – Bilingue & Prêt pour l’IA</p>
+    <p>Knowora V1.4 – Multilangue + Audio + Suggestions</p>
   </footer>
 </body>
 </html>
