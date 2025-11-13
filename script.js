@@ -88,10 +88,10 @@ document.getElementById("searchInput").addEventListener("input", async (e) => {
 
 /* ----------------- MICRO (AUDIO) ----------------- */
 const voiceBtn = document.getElementById("voiceBtn");
-const recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+const recognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-if (recognition) {
-  const rec = new recognition();
+if (recognitionAPI) {
+  const rec = new recognitionAPI();
   rec.lang = "fr-FR";
 
   voiceBtn.onclick = () => rec.start();
@@ -100,4 +100,6 @@ if (recognition) {
     const text = event.results[0][0].transcript;
     document.getElementById("searchInput").value = text;
   };
+} else {
+  voiceBtn.style.display = "none"; // si navigateur ne supporte pas
 }
