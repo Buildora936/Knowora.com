@@ -1,17 +1,22 @@
-// Knowora v1.0 - script.js
-// Bilingue FR/EN, recherche Wikipedia + mini IA simulée, historique localStorage, thème
+// Knowora v1.2 - Google + ChatGPT style (FR/EN)
+// Recherche Wikipedia (auto FR/EN), chat IA simulé, historique localStorage, thème
 
 document.addEventListener('DOMContentLoaded', () => {
-  const queryIn = document.getElementById('query');
+  const qInput = document.getElementById('query');
   const searchBtn = document.getElementById('searchBtn');
   const aiBtn = document.getElementById('aiBtn');
-  const results = document.getElementById('results');
+  const resultsEl = document.getElementById('results');
   const historyList = document.getElementById('historyList');
   const clearHistory = document.getElementById('clearHistory');
   const langSelect = document.getElementById('langSelect');
   const themeToggle = document.getElementById('themeToggle');
   const yr = document.getElementById('yr');
-  yr.textContent = new Date().getFullYear();
+  yr && (yr.textContent = new Date().getFullYear());
+
+  // Chat elements
+  const chatWindow = document.getElementById('chatWindow');
+  const chatInput = document.getElementById('chatInput');
+  const sendChat = document.getElementById('sendChat');
 
   // init theme
   const savedTheme = localStorage.getItem('knowora_theme');
@@ -19,7 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
     document.documentElement.setAttribute('data-theme', 'dark');
     themeToggle.checked = true;
   }
-
   themeToggle.addEventListener('change', () => {
     if (themeToggle.checked) {
       document.documentElement.setAttribute('data-theme', 'dark');
@@ -31,7 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // history
-  const HIST_KEY = 'knowora_history_v1';
+  const HIST_KEY = 'knowora_history_v1.2';
   function loadHistory() {
     const h = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
     historyList.innerHTML = '';
@@ -46,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div><button data-i="${idx}">Voir</button></div>`;
       historyList.appendChild(div);
       div.querySelector('button').onclick = () => {
-        queryIn.value = entry.q;
+        qInput.value = entry.q;
         langSelect.value = entry.lang;
         doSearch(entry.q, entry.lang);
       };
@@ -58,110 +62,138 @@ document.addEventListener('DOMContentLoaded', () => {
     loadHistory();
   });
 
-  // helpers
   function saveHistory(q, lang) {
     if (!q) return;
     const arr = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
     arr.push({ q, lang, t: Date.now() });
-    // keep max 50
-    if (arr.length > 50) arr.splice(0, arr.length - 50);
+    if (arr.length > 100) arr.splice(0, arr.length - 100);
     localStorage.setItem(HIST_KEY, JSON.stringify(arr));
     loadHistory();
   }
 
-  // main search function: Wikipedia summary
-  async function fetchWikiSummary(query, lang = 'fr') {
+  // language detection helper: auto => based on browser or simple char test
+  function detectLangAuto(q) {
+    const browser = navigator.language || navigator.userLanguage || 'fr';
+    // quick heuristic: presence of accented chars -> french
+    if (/[àâçéèêëîïôûùüœ]/i.test(q)) return 'fr';
+    if (/\b(le|la|les|de|des|un|une|et)\b/i.test(q)) return 'fr';
+    if (/^[\u0000-\u007F]*$/.test(q) && browser.startsWith('en')) return 'en';
+    // fallback to fr
+    return browser.startsWith('en') ? 'en' : 'fr';
+  }
+
+  // wiki fetch
+  async function fetchWikiSummary(query, lang) {
     const endpoint = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(query)}`;
     const r = await fetch(endpoint);
-    if (!r.ok) {
-      throw new Error('Aucun résultat ou erreur réseau');
-    }
+    if (!r.ok) throw new Error('Aucun résultat ou erreur réseau');
     return r.json();
   }
 
-  function showResultCard(title, extract, url, thumbnail) {
-    results.innerHTML = `
+  function renderResult(title, extract, url, thumb) {
+    resultsEl.innerHTML = `
       <div class="result-card">
-        ${thumbnail ? `<img class="thumbnail" src="${thumbnail}" alt="${title}">` : ''}
-        <h2>${title}</h2>
-        <p>${extract}</p>
-        <p><a target="_blank" href="${url}">Lire plus sur Wikipedia →</a></p>
+        ${thumb ? `<img class="thumbnail" src="${thumb}" alt="${title}">` : ''}
+        <div class="meta">
+          <h2>${title}</h2>
+          <p>${extract}</p>
+          <p><a target="_blank" href="${url}">Lire plus sur Wikipedia →</a></p>
+        </div>
       </div>
     `;
   }
 
-  async function doSearch(q, lang) {
-    results.innerHTML = `<div class="result-card"><p>🔎 Recherche « ${q} » (${lang.toUpperCase()})…</p></div>`;
+  async function doSearch(q, forcedLang) {
+    resultsEl.innerHTML = `<div class="result-card"><p>🔎 Recherche « ${q} »…</p></div>`;
+    let lang = forcedLang || langSelect.value || 'auto';
+    if (lang === 'auto') lang = detectLangAuto(q);
     try {
       const data = await fetchWikiSummary(q, lang);
       if (data?.title && data?.extract) {
         const thumb = data?.thumbnail?.source || '';
         const link = data?.content_urls?.desktop?.page || `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(data.title)}`;
-        showResultCard(data.title, data.extract, link, thumb);
+        renderResult(data.title, data.extract, link, thumb);
         saveHistory(q, lang);
       } else {
-        results.innerHTML = `<div class="result-card"><p>Aucun résumé trouvé pour « ${q} ».</p></div>`;
+        resultsEl.innerHTML = `<div class="result-card"><p>Aucun résumé trouvé pour « ${q} ».</p></div>`;
       }
     } catch (err) {
-      results.innerHTML = `<div class="result-card"><p>Erreur : ${err.message}</p></div>`;
+      resultsEl.innerHTML = `<div class="result-card"><p>Erreur : ${err.message}</p></div>`;
     }
   }
 
-  // mini AI: simuler une réponse plus naturelle en reformulant le résumé
-  async function aiAnswer(q, lang) {
-    results.innerHTML = `<div class="result-card"><p>🤖 Knowora pense…</p></div>`;
+  // mini-AI: conversation + uses wiki summary internally; ready to be replaced by real API
+  function appendChat(message, who='assistant') {
+    const div = document.createElement('div');
+    div.className = `chat-msg ${who === 'user' ? 'user' : 'assistant'}`;
+    div.innerHTML = `<div class="bubble">${escapeHtml(message)}</div>`;
+    chatWindow.appendChild(div);
+    chatWindow.scrollTop = chatWindow.scrollHeight;
+  }
+
+  function escapeHtml(text){ return String(text).replace(/[&<>"]/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' }[c])); }
+
+  async function aiAnswer(q, forcedLang) {
+    appendChat(q, 'user');
+    appendChat('🤖 Knowora réfléchit…', 'assistant');
+    let lang = forcedLang || langSelect.value || 'auto';
+    if (lang === 'auto') lang = detectLangAuto(q);
     try {
       const data = await fetchWikiSummary(q, lang);
-      let text = data?.extract || null;
-      if (!text) {
-        results.innerHTML = `<div class="result-card"><p>Désolé, aucune source trouvée pour "${q}".</p></div>`;
+      if (!data?.extract) {
+        // replace last assistant message
+        chatWindow.lastChild.querySelector('.bubble').innerText = `Désolé, aucune source trouvée pour "${q}".`;
         return;
       }
-
-      // simple "reformulation" heuristic: keep first 3 sentences and add friendly tone
+      // simple reformulation: take first 3 sentences
+      const text = data.extract;
       const sentences = text.match(/[^.!?]+[.!?]?/g) || [text];
       const short = sentences.slice(0, 3).join(' ').trim();
-
-      // language aware template
       const reply = (lang === 'fr')
-        ? `Voici un résumé (Knowora AI) : ${short}\n\nSi tu veux plus de détails, clique sur "Lire plus" ou pose une question plus précise.`
-        : `Here is a quick summary (Knowora AI): ${short}\n\nIf you want more details, click "Read more" or ask a more specific question.`;
+        ? `Résumé Knowora : ${short}\n\nPour plus de détails, cliquez "Lire plus" ou demande une précision.`
+        : `Knowora summary: ${short}\n\nFor more details click "Read more" or ask a more specific question.`;
 
-      const thumb = data?.thumbnail?.source || '';
-      const link = data?.content_urls?.desktop?.page || `https://${lang}.wikipedia.org/wiki/${encodeURIComponent(data.title)}`;
-
-      results.innerHTML = `
-        <div class="result-card">
-          ${thumb ? `<img class="thumbnail" src="${thumb}" alt="${data.title}">` : ''}
-          <h2>${data.title} — Knowora AI</h2>
-          <p style="white-space:pre-line">${reply}</p>
-          <p><a target="_blank" href="${link}">${lang === 'fr' ? 'Lire plus sur Wikipedia' : 'Read more on Wikipedia'} →</a></p>
-        </div>
-      `;
+      // replace last assistant placeholder with real reply
+      chatWindow.lastChild.querySelector('.bubble').innerText = reply;
       saveHistory(q, lang);
     } catch (err) {
-      results.innerHTML = `<div class="result-card"><p>Erreur AI : ${err.message}</p></div>`;
+      chatWindow.lastChild.querySelector('.bubble').innerText = `Erreur AI : ${err.message}`;
     }
   }
 
   // UI events
   searchBtn.addEventListener('click', () => {
-    const q = queryIn.value.trim();
-    if (!q) { results.innerHTML = `<div class="result-card"><p>Entrez un mot-clé.</p></div>`; return; }
-    const lang = langSelect.value || 'fr';
+    const q = qInputTrim();
+    if (!q) return resultsEl.innerHTML = `<div class="result-card"><p>Entrez un mot-clé.</p></div>`;
+    const lang = langSelect.value === 'auto' ? 'auto' : langSelect.value;
     doSearch(q, lang);
   });
 
   aiBtn.addEventListener('click', () => {
-    const q = queryIn.value.trim();
-    if (!q) { results.innerHTML = `<div class="result-card"><p>Pose une question pour Knowora AI.</p></div>`; return; }
-    const lang = langSelect.value || 'fr';
-    aiAnswer(q, lang);
+    const q = qInputTrim();
+    if (!q) return appendChat('Pose une question pour Knowora AI.', 'assistant');
+    aiAnswer(q);
   });
 
-  // enter key
-  queryIn.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') searchBtn.click();
-  });
+  // suggestions
+  document.querySelectorAll('.sugg').forEach(b => b.onclick = () => { qInputSet(b.innerText); });
 
+  function qInputTrim(){ return (qInput.value || '').trim(); }
+  function qInputSet(v){ qInput.value = v; searchBtn.click(); }
+
+  // enter key in search
+  const qInput = document.getElementById('query');
+  qInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') searchBtn.click(); });
+
+  // chat send
+  sendChat.addEventListener('click', () => {
+    const t = (chatInput.value || '').trim();
+    if (!t) return;
+    chatInput.value = '';
+    aiAnswer(t);
+  });
+  chatInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') sendChat.click(); });
+
+  // init sample content
+  resultsEl.innerHTML = `<div class="empty">Bienvenue sur Knowora v1.2 — tapez votre recherche puis appuyez sur Rechercher ou Ask Knowora AI.</div>`;
 });
