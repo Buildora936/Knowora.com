@@ -4,40 +4,48 @@
 }
 
 body {
-  background: linear-gradient(135deg, #eef2f3, #8e9eab);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-  color: #222;
+  background: var(--bg);
+  color: var(--text);
+  transition: 0.3s;
+}
+
+:root {
+  --bg: #eef2f3;
+  --text: #222;
+  --card: white;
+}
+
+body.dark {
+  --bg: #1a1a1a;
+  --text: #f0f0f0;
+  --card: #2a2a2a;
 }
 
 header {
-  margin-top: 60px;
+  margin-top: 50px;
   text-align: center;
+  position: relative;
 }
 
-h1 {
-  font-size: 2.8rem;
-  color: #1e88e5;
-  margin-bottom: 5px;
+#themeToggle {
+  position: absolute;
+  top: 5px;
+  right: 15px;
+  background: var(--card);
+  border: none;
+  padding: 10px;
+  border-radius: 50%;
+  cursor: pointer;
 }
 
-#slogan {
-  font-size: 1rem;
-  color: #444;
-}
-
-main {
-  margin-top: 80px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.searchBox {
+  margin-top: 60px;
+  position: relative;
+  width: 320px;
 }
 
 input {
-  width: 300px;
+  width: 100%;
   padding: 12px;
   border-radius: 25px;
   border: none;
@@ -49,19 +57,49 @@ button {
   background-color: #1e88e5;
   color: white;
   border: none;
-  padding: 12px 18px;
+  padding: 10px 16px;
   border-radius: 25px;
   cursor: pointer;
   transition: 0.3s;
 }
 
-button:hover {
-  background-color: #1565c0;
+#voiceBtn {
+  background: #ff4081;
 }
 
-footer {
+#suggestions {
+  list-style: none;
+  padding: 0;
+  margin-top: 5px;
+  background: var(--card);
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+  display: none;
   position: absolute;
-  bottom: 20px;
-  font-size: 0.9rem;
-  color: #333;
+  width: 100%;
+}
+
+#suggestions li {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+}
+
+#suggestions li:hover {
+  background: #e3f2fd;
+}
+
+#historyList {
+  margin-top: 20px;
+  width: 320px;
+  list-style: none;
+  padding: 0;
+}
+
+#historyList li {
+  background: var(--card);
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  cursor: pointer;
 }
