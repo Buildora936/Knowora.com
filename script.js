@@ -124,3 +124,28 @@ function playSound(type) {
     audio.volume = 0.3;
     audio.play();
 }
+const micBtn = document.getElementById("micBtn");
+let recognition;
+
+try {
+  recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+  recognition.lang = "fr-FR";
+
+  micBtn.addEventListener("click", () => {
+    recognition.start();
+    micBtn.classList.add("listening");
+  });
+
+  recognition.onresult = (event) => {
+    const text = event.results[0][0].transcript;
+    document.querySelector("#searchInput").value = text;
+    micBtn.classList.remove("listening");
+  };
+
+  recognition.onerror = () => {
+    micBtn.classList.remove("listening");
+  };
+
+} catch (e) {
+  console.log("Micro non supporté");
+}
