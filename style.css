@@ -142,4 +142,38 @@ button:hover {
   to {
     transform: rotate(360deg);
   }
+.speak {
+  margin-top: 10px;
+  background: #1e88e5;
+  color: #fff;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 25px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.speak:hover {
+  background: #1565c0;
+}
+.mic {
+  background: #1e88e5;
+  color: white;
+  border: none;
+  padding: 12px 18px;
+  font-size: 1.2rem;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.mic.listening {
+  animation: pulse 1s infinite;
+  background: #e53935;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
 }
