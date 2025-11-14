@@ -31,3 +31,9 @@ async function searchKnowora(query) {
 }
 
 if (query) searchKnowora(query);
+document.querySelector("#speakBtn").addEventListener("click", () => {
+  const text = document.querySelector("#results").innerText;
+  const speech = new SpeechSynthesisUtterance(text);
+  speech.lang = "fr-FR";
+  window.speechSynthesis.speak(speech);
+});
