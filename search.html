@@ -3,23 +3,43 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Résultats – Knowora</title>
+  <title>Résultats – Knowora V1.5</title>
   <link rel="stylesheet" href="style.css">
   <script defer src="search.js"></script>
 </head>
 <body>
   <header>
-    <h1>🔎 Knowora Search</h1>
+    <h1>🔎 Knowora Search — V1.5</h1>
+    <p id="sub">Résultats combinés : web • Wikipedia FR/EN • YouTube</p>
     <button id="speakBtn" class="speak">🔊 Lire les résultats</button>
   </header>
 
   <main>
-    <div id="results">Chargement en cour...</div>
-    <div id="loader" class="loader"></div>
+    <div id="loader" class="loader" aria-hidden="true"></div>
+
+    <section id="webSection" class="section">
+      <h2>🌐 Résultats web</h2>
+      <div id="webResults" class="section-body">Chargement…</div>
+    </section>
+
+    <section id="wikiFR" class="section">
+      <h2>🇫🇷 Wikipedia (FR)</h2>
+      <div id="wikiFrBody" class="section-body">Chargement…</div>
+    </section>
+
+    <section id="wikiEN" class="section">
+      <h2>🇬🇧 Wikipedia (EN)</h2>
+      <div id="wikiEnBody" class="section-body">Chargement…</div>
+    </section>
+
+    <section id="ytSection" class="section">
+      <h2>🎬 YouTube — vidéos</h2>
+      <div id="ytBody" class="section-body">Chargement…</div>
+    </section>
   </main>
 
   <footer>
-    <p>Knowora V1.3 – Multi-source Search</p>
+    <p>Knowora V1.5 – Multi-sources • Si une source ne charge pas, réessayez plus tard.</p>
   </footer>
 </body>
 </html>
