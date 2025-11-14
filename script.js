@@ -1,151 +1,160 @@
-// Détection de langue
-const userLang = navigator.language || navigator.userLanguage;
-if (userLang.startsWith('en')) {
-  document.querySelector('#slogan').textContent = "Knowledge at your fingertips";
-  document.querySelector('#searchInput').placeholder = "Search...";
-}
-/* ----------------- THEME SOMBRE ----------------- */
-const themeToggle = document.getElementById("themeToggle");
+// script.js (Knowora V1.4 — corrigé)
+// Gère : thème, suggestions, micro (animation), historique, recherche
+document.addEventListener('DOMContentLoaded', () => {
+  // éléments
+  const slogan = document.getElementById('slogan');
+  const searchInput = document.getElementById('searchInput');
+  const searchBtn = document.getElementById('searchBtn');
+  const suggestionsBox = document.getElementById('suggestions');
+  const historyListEl = document.getElementById('historyList');
+  const themeToggle = document.getElementById('themeToggle');
+  const micBtn = document.getElementById('micBtn');
 
-themeToggle.addEventListener("click", () => {
-  document.body.classList.toggle("dark");
-
-  // Change icon
-  themeToggle.textContent =
-    document.body.classList.contains("dark") ? "☀️" : "🌙";
-
-  // Sauvegarde du thème
-  localStorage.setItem("theme", document.body.classList.contains("dark") ? "dark" : "light");
-});
-
-// Charger thème sauvegardé
-if (localStorage.getItem("theme") === "dark") {
-  document.body.classList.add("dark");
-  themeToggle.textContent = "☀️";
-}
-
-/* ----------------- HISTORIQUE ----------------- */
-function loadHistory() {
-  let hist = JSON.parse(localStorage.getItem("history") || "[]");
-  const list = document.getElementById("historyList");
-  list.innerHTML = "";
-
-  hist.slice(-8).reverse().forEach(item => {
-    let li = document.createElement("li");
-    li.textContent = item;
-    li.onclick = () => window.location.href = `search.html?q=${encodeURIComponent(item)}`;
-    list.appendChild(li);
-  });
-}
-loadHistory();
-
-function saveHistory(q) {
-  let hist = JSON.parse(localStorage.getItem("history") || "[]");
-  if (!hist.includes(q)) hist.push(q);
-  localStorage.setItem("history", JSON.stringify(hist));
-}
-
-/* ----------------- RECHERCHE ----------------- */
-document.querySelector('#searchBtn').addEventListener('click', () => {
-  const query = document.querySelector('#searchInput').value.trim();
-  if (query) {
-    saveHistory(query);
-    window.location.href = `search.html?q=${encodeURIComponent(query)}`;
-  }
-});
-
-/* ----------------- SUGGESTIONS ----------------- */
-const suggestionsBox = document.getElementById("suggestions");
-
-document.getElementById("searchInput").addEventListener("input", async (e) => {
-  const q = e.target.value.trim();
-  if (!q) {
-    suggestionsBox.style.display = "none";
-    return;
+  // détection langue / placeholder
+  const userLang = navigator.language || navigator.userLanguage || 'fr';
+  if (userLang.startsWith('en')) {
+    if (slogan) slogan.textContent = "Knowledge at your fingertips";
+    if (searchInput) searchInput.placeholder = "Search...";
   }
 
-  const res = await fetch(`https://api.duckduckgo.com/?q=${q}&format=json`);
-  const data = await res.json();
+  /* ===== THEME ===== */
+  // lecture du thème sauvé
+  const savedTheme = localStorage.getItem('knowora_theme');
+  if (savedTheme === 'dark') {
+    document.body.classList.add('dark');
+    if (themeToggle) themeToggle.textContent = '☀️';
+  } else {
+    if (themeToggle) themeToggle.textContent = '🌙 Mode sombre';
+  }
 
-  suggestionsBox.innerHTML = "";
-
-  if (data.RelatedTopics) {
-    data.RelatedTopics.slice(0, 5).forEach(item => {
-      if (item.Text) {
-        let li = document.createElement("li");
-        li.textContent = item.Text;
-        li.onclick = () => {
-          document.querySelector('#searchInput').value = item.Text;
-          suggestionsBox.style.display = "none";
-        };
-        suggestionsBox.appendChild(li);
-      }
+  if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+      const isDark = document.body.classList.contains('dark');
+      themeToggle.textContent = isDark ? '☀️' : '🌙 Mode sombre';
+      localStorage.setItem('knowora_theme', isDark ? 'dark' : 'light');
     });
   }
 
-  suggestionsBox.style.display = "block";
-});
-
-/* ----------------- MICRO (AUDIO) ----------------- */
-const voiceBtn = document.getElementById("voiceBtn");
-const recognitionAPI = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-if (recognitionAPI) {
-  const rec = new recognitionAPI();
-  rec.lang = "fr-FR";
-
-  voiceBtn.onclick = () => rec.start();
-
-  rec.onresult = (event) => {
-    const text = event.results[0][0].transcript;
-    document.getElementById("searchInput").value = text;
-  };
-} else {
-  voiceBtn.style.display = "none"; // si navigateur ne supporte pas
-}
-
-// --- AUDIO ---
-let audioEnabled = false;
-
-document.getElementById("audioToggle").addEventListener("click", () => {
-    audioEnabled = !audioEnabled;
-    if (audioEnabled) {
-        document.getElementById("audioToggle").innerText = "🔊 Audio ON";
-    } else {
-        document.getElementById("audioToggle").innerText = "🔈 Audio OFF";
+  /* ===== HISTORIQUE ===== */
+  const HIST_KEY = 'knowora_history_v1';
+  function loadHistory() {
+    const hist = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+    if (!historyListEl) return;
+    historyListEl.innerHTML = '';
+    if (hist.length === 0) {
+      historyListEl.innerHTML = '<li style="color:var(--muted || #666)">Aucun historique.</li>';
+      return;
     }
-});
+    hist.slice().reverse().slice(0, 10).forEach(q => {
+      const li = document.createElement('li');
+      li.textContent = q;
+      li.style.cursor = 'pointer';
+      li.onclick = () => {
+        window.location.href = `search.html?q=${encodeURIComponent(q)}`;
+      };
+      historyListEl.appendChild(li);
+    });
+  }
+  loadHistory();
+  function saveHistory(q) {
+    if (!q) return;
+    const arr = JSON.parse(localStorage.getItem(HIST_KEY) || '[]');
+    if (!arr.includes(q)) arr.push(q);
+    // garder max 200
+    while (arr.length > 200) arr.shift();
+    localStorage.setItem(HIST_KEY, JSON.stringify(arr));
+    loadHistory();
+  }
 
-// Fonction pour jouer un son
-function playSound(type) {
-    if (!audioEnabled) return;
+  /* ===== RECHERCHE (bouton) ===== */
+  if (searchBtn && searchInput) {
+    searchBtn.addEventListener('click', () => {
+      const q = searchInput.value.trim();
+      if (!q) return;
+      saveHistory(q);
+      window.location.href = `search.html?q=${encodeURIComponent(q)}`;
+    });
+  }
 
-    const audio = new Audio(`sounds/${type}.mp3`);
-    audio.volume = 0.3;
-    audio.play();
-}
-const micBtn = document.getElementById("micBtn");
-let recognition;
+  /* ===== SUGGESTIONS (DuckDuckGo) ===== */
+  if (searchInput && suggestionsBox) {
+    let suggestionsTimeout = null;
+    searchInput.addEventListener('input', async (e) => {
+      const q = e.target.value.trim();
+      if (!q) {
+        suggestionsBox.style.display = 'none';
+        return;
+      }
+      // throttle
+      if (suggestionsTimeout) clearTimeout(suggestionsTimeout);
+      suggestionsTimeout = setTimeout(async () => {
+        try {
+          const res = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(q)}&format=json&no_html=1`);
+          const data = await res.json();
+          suggestionsBox.innerHTML = '';
+          const related = data.RelatedTopics || [];
+          let count = 0;
+          for (const item of related) {
+            // item may be group with Topics
+            let text = item.Text || (item.Topics && item.Topics[0] && item.Topics[0].Text);
+            if (!text) continue;
+            const li = document.createElement('li');
+            li.textContent = text;
+            li.onclick = () => {
+              searchInput.value = text;
+              suggestionsBox.style.display = 'none';
+            };
+            suggestionsBox.appendChild(li);
+            count++;
+            if (count >= 6) break;
+          }
+          suggestionsBox.style.display = suggestionsBox.children.length ? 'block' : 'none';
+        } catch (err) {
+          suggestionsBox.style.display = 'none';
+          console.warn('DuckDuckGo suggestions failed', err);
+        }
+      }, 220);
+    });
+    // fermer suggestions si clic en dehors
+    document.addEventListener('click', (ev) => {
+      if (!suggestionsBox.contains(ev.target) && ev.target !== searchInput) suggestionsBox.style.display = 'none';
+    });
+  }
 
-try {
-  recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-  recognition.lang = "fr-FR";
+  /* ===== MICRO (SpeechRecognition) ===== */
+  if (micBtn) {
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+    if (!Recognition) {
+      // navigateur non supporté
+      micBtn.style.display = 'none';
+    } else {
+      const rec = new Recognition();
+      // choix de langue: basique : si navigateur anglais, en-US sinon fr-FR
+      rec.lang = userLang.startsWith('en') ? 'en-US' : 'fr-FR';
+      rec.interimResults = false;
+      rec.maxAlternatives = 1;
 
-  micBtn.addEventListener("click", () => {
-    recognition.start();
-    micBtn.classList.add("listening");
-  });
+      micBtn.addEventListener('click', () => {
+        try {
+          rec.start();
+          micBtn.classList.add('listening');
+        } catch (e) {
+          console.warn('start rec failed', e);
+        }
+      });
 
-  recognition.onresult = (event) => {
-    const text = event.results[0][0].transcript;
-    document.querySelector("#searchInput").value = text;
-    micBtn.classList.remove("listening");
-  };
+      rec.onresult = (ev) => {
+        const t = ev.results[0][0].transcript;
+        if (searchInput) searchInput.value = t;
+        micBtn.classList.remove('listening');
+      };
+      rec.onerror = (e) => {
+        console.warn('Speech error', e);
+        micBtn.classList.remove('listening');
+      };
+      rec.onend = () => micBtn.classList.remove('listening');
+    }
+  }
 
-  recognition.onerror = () => {
-    micBtn.classList.remove("listening");
-  };
-
-} catch (e) {
-  console.log("Micro non supporté");
-}
+}); // DOMContentLoaded
